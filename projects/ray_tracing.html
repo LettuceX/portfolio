@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Interactive WebGL Ray Tracer</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+
+<link rel="stylesheet" href="../css/style.css">
+
+<style>
+    /* 1. Page Layout - Allow Scrolling */
+    body {
+        background-color: #1e1e1e; /* Matches your modal background */
+        color: #e0e0e0;
+        font-family: 'Segoe UI', sans-serif;
+        margin: 0;
+    }
+
+    /* 2. Game Container - Groups Canvas + Controls */
+    .game-container {
+        border: 1px solid #444;
+        background: #000;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+
+    /* 3. Canvas Styling */
+    #glcanvas {
+        display: block;
+        width: 100% !important; /* Fill the container width */
+        height: 500px !important; /* Fixed height for the view window */
+        background-color: #000;
+        border-bottom: 1px solid #333;
+    }
+
+    /* 4. Controls Styling */
+    .controls {
+        display: flex;
+        flex-wrap: wrap; /* Allow wrapping on small screens */
+        gap: 20px;
+        padding: 15px;
+        background: #111;
+        border-radius: 0 0 4px 4px;
+    }
+
+    .control-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #222;
+        padding: 8px 15px;
+        border-radius: 20px; /* Pill shape for controls */
+        min-width: 200px;
+    }
+
+    .control-row label {
+        font-weight: bold;
+        color: #fff;
+        font-size: 0.9rem;
+        width: auto;
+    }
+
+    input[type=range] { flex-grow: 1; cursor: pointer; }
+    input[type=checkbox] { transform: scale(1.2); cursor: pointer; }
+
+    /* 5. Header Styling (Matches your other projects) */
+    .modal-header { border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
+    .modal-meta { margin-bottom: 8px; }
+    .modal-meta span { margin-right: 30px; color: #aaa; font-size: 0.9rem; }
+    .modal-meta strong { color: #fff; }
+    
+    h3 { color: #fff; margin-top: 30px; }
+    p, li { color: #ccc; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+    <div class="modal-header">
+        <h2>Interactive WebGL Ray Tracer</h2>
+        <div class="modal-meta">
+            <span><strong>Role: </strong>Solo Graphics Programmer</span>
+            <span><strong>Tech Stack: </strong>WebGL API, GLSL, JavaScript</span>
+        </div>
+        <div class="modal-meta">
+            <span><strong>Architecture: </strong>GPU-Accelerated Ray Casting (Fragment Shader)</span>
+        </div>
+    </div>
+
+    <div class="game-container">
+        <canvas id="glcanvas"></canvas>
+
+        <div class="controls">
+            <div class="control-row">
+                <input type="checkbox" id="sw1" checked />
+                <label>Light 1</label>
+                <input type="range" id="slider1" min="0" max="360" value="0" />
+            </div>
+
+            <div class="control-row">
+                <input type="checkbox" id="sw2" checked />
+                <label>Light 2</label>
+                <input type="range" id="slider2" min="-0.8" max="2.0" step="0.1" value="-0.5" />
+            </div>
+        </div>
+        <p style="text-align: center; color: #666; font-size: 0.8rem; margin: 5px 0 0 0;">
+            <em>*Rendered in real-time. Toggle lights and move sliders to update uniforms.</em>
+        </p>
+    </div>
+
+    <h3>Project Description</h3>
+    <p>
+        This project demonstrates the fundamentals of computer graphics by implementing a ray tracer from scratch using raw WebGL. 
+        Unlike rasterization used in standard game engines, this application solves the rendering equation per-pixel to generate 
+        mathematically perfect geometry without using 3D model assets.
+    </p>
+
+    <h3>1. Core Architecture: Fragment Shader Ray Casting</h3>
+    <p>Moved the heavy lifting from the CPU to the GPU by implementing the ray tracing logic entirely within GLSL Fragment Shaders.</p>
+    <ul style="margin-left: 20px; margin-bottom: 20px;">
+        <li><strong>Per-Pixel Parallelism: </strong>Utilized the GPU's parallel architecture to calculate ray paths for every pixel on the screen simultaneously, achieving 60 FPS performance.</li>
+        <li><strong>Mathematical Primitives: </strong>Instead of loading meshes, the scene is defined by pure algebraic equations (Sphere primitives), allowing for infinite precision and zero polygon count.</li>
+    </ul>
+
+    <h3>2. Lighting & Physics Implementation</h3>
+    <p>Manual implementation of light transport algorithms to simulate realistic surface properties.</p>
+    <ul style="margin-left: 20px; margin-bottom: 20px;">
+        <li><strong>Phong Reflection Model: </strong>Wrote custom GLSL functions to calculate Ambient, Diffuse, and Specular reflection components based on surface normals and viewer position.</li>
+        <li><strong>Hard Shadows: </strong>Implemented secondary "shadow rays" that cast from the intersection point towards light sources to determine occlusion.</li>
+    </ul>
+
+    <script>
+        const canvas = document.getElementById('glcanvas');
+        const gl = canvas.getContext('webgl');
+        if (!gl) { alert('WebGL not supported'); throw new Error('WebGL not supported'); }
+
+        // --- Vertex Shader ---
+        const vsSrc = `
+        attribute vec2 a_pos;
+        void main() {
+        gl_Position = vec4(a_pos, 0.0, 1.0);
+        }
+        `;
+
+        // --- Fragment Shader ---
+        const fsSrc = `
+        precision highp float;
+
+        const float INF = 1.0e20;
+        const float EPS = 1e-3;
+        const int MAX_DEPTH = 8;
+        const int SHADOW_SAMPLES = 16; 
+
+        uniform vec2 u_resolution;
+        uniform float u_light1Angle;
+        uniform float u_light2Height;
+        uniform float u_light1On;
+        uniform float u_light2On;
+
+        // --- Material Types ---
+        // 0: Standard (Phong)
+        // 1: Mirror
+        // 2: Glass
+
+        struct Material {
+        vec3 diff;
+        vec3 amb;
+        vec3 spec;
+        float exp;
+        float ior;
+        int type;
+        };
+
+        struct Hit {
+        float t;
+        vec3 pos;
+        vec3 normal;
+        Material mat;
+        };
+
+        float rand(vec2 co) {
+        return fract(sin(dot(co, vec2(12.9898,78.233))) * 43758.5453);
+        }
+
+        vec3 srgbToLinear(vec3 srgb) {
+            return pow(srgb, vec3(2.2));
+        }
+
+        // --- Scene Objects ---
+
+        Hit hitSphere(vec3 O, vec3 D, vec3 C, float R, Material mat) {
+        Hit h; h.t = INF;
+        vec3 oc = O - C;
+        float a = dot(D, D);
+        float b = 2.0 * dot(oc, D);
+        float c = dot(oc, oc) - R * R;
+        float disc = b * b - 4.0 * a * c;
+        if (disc < 0.0) return h;
+        float sd = sqrt(disc);
+        float t1 = (-b - sd) / (2.0 * a);
+        float t2 = (-b + sd) / (2.0 * a);
+        float t = INF;
+        if (t1 > EPS) t = t1; else if (t2 > EPS) t = t2;
+        if (t < INF) {
+            h.t = t;
+            h.pos = O + D * t;
+            h.normal = normalize(h.pos - C);
+            h.mat = mat;
+        }
+        return h;
+        }
+
+        Hit hitPlane(vec3 O, vec3 D, vec3 P0, vec3 N, Material mat) {
+        Hit h; h.t = INF;
+        float denom = dot(D, N);
+        if (abs(denom) < 1e-6) return h;
+        float t = dot(P0 - O, N) / denom;
+        if (t > EPS) {
+            h.t = t;
+            h.pos = O + D * t;
+            vec3 n = N;
+            if (dot(n, D) > 0.0) n = -n;
+            h.normal = normalize(n);
+            h.mat = mat;
+        }
+        return h;
+        }
+
+        // --- Materials Definitions ---
+
+        Material matFloor() { 
+        Material m; 
+        m.diff=vec3(1.0); m.spec=vec3(0.0); m.amb=vec3(0.1); m.exp=0.0; 
+        m.ior=0.0; m.type=0; 
+        return m; 
+        }
+
+        Material matBackWall() { 
+        Material m; 
+        m.diff=vec3(1.0); m.spec=vec3(0.0); m.amb=vec3(0.1); m.exp=0.0; 
+        m.ior=0.0; m.type=0; 
+        return m; 
+        }
+
+        Material matRed() { 
+        Material m; 
+        m.diff=vec3(0.8, 0.1, 0.1); m.spec=vec3(0.5); m.amb=vec3(0.1); m.exp=50.0; 
+        m.ior=0.0; m.type=0; 
+        return m; 
+        }
+
+        Material matBlue() { 
+        Material m; 
+        m.diff=vec3(0.1, 0.1, 0.8); m.spec=vec3(0.5); m.amb=vec3(0.1); m.exp=50.0; 
+        m.ior=0.0; m.type=0; 
+        return m; 
+        }
+
+        Material matMirror() { 
+        Material m; 
+        m.diff=vec3(0.95); m.spec=vec3(1.0); m.amb=vec3(0.0); m.exp=100.0; 
+        m.ior=0.0; m.type=1; 
+        return m; 
+        }
+
+        Material matGlass() { 
+        Material m; 
+        m.diff=vec3(0.98, 0.99, 1.0); m.spec=vec3(1.0); m.amb=vec3(0.1); m.exp=500.0; 
+        m.ior=1.5; m.type=2; 
+        return m; 
+        }
+
+
+        Hit sceneIntersect(vec3 O, vec3 D) {
+        Hit best; best.t = INF;
+
+        Hit h1 = hitSphere(O, D, vec3(0.5, -0.7, 0.5), 0.3, matRed()); 
+        if (h1.t < best.t) best = h1;
+
+        Hit h2 = hitSphere(O, D, vec3(1.0, -0.7, 0.0), 0.3, matBlue()); 
+        if (h2.t < best.t) best = h2;
+
+        Hit h3 = hitSphere(O, D, vec3(-0.5, 0.0, -0.5), 1.0, matMirror()); 
+        if (h3.t < best.t) best = h3;
+
+        Hit h4 = hitSphere(O, D, vec3(1.5, 0.0, -1.5), 1.0, matMirror()); 
+        if (h4.t < best.t) best = h4;
+
+        Hit h5 = hitSphere(O, D, vec3(0.8, -0.7, 1.0), 0.3, matGlass()); 
+        if (h5.t < best.t) best = h5;
+
+        Hit h6 = hitPlane(O, D, vec3(0.0, -1.0, 0.0), vec3(0.0, 1.0, 0.0), matFloor()); 
+        if (h6.t < best.t) best = h6;
+
+        Hit h7 = hitPlane(O, D, vec3(0.0, 0.0, -3.0), vec3(0.0, 0.0, 1.0), matBackWall()); 
+        if (h7.t < best.t) best = h7;
+
+        return best;
+        }
+
+        // --- Shadow Logic ---
+        float getShadow(vec3 P, vec3 LPos, vec2 fragCoord) {
+        float lightRadius = 0.2;
+        float totalVis = 0.0;
+
+        for (int i = 0; i < SHADOW_SAMPLES; i++) {
+            float fi = float(i);
+            float r = lightRadius * rand(fragCoord + vec2(fi, fi * 0.1));
+            float a = 6.28 * rand(fragCoord + vec2(fi * 0.2, fi));
+            vec3 offset = vec3(r * cos(a), r * sin(a), 0.0);
+            
+            vec3 target = LPos + offset;
+            vec3 L = target - P;
+            float distToLight = length(L);
+            L = normalize(L);
+            
+            vec3 currOrig = P + L * EPS * 2.0;
+            float currentRayVis = 1.0;
+            
+            // Ray march through glass
+            for(int k=0; k<3; k++) {
+                Hit h = sceneIntersect(currOrig, L);
+                
+                if (h.t >= distToLight) break;
+                
+                if (h.mat.type == 2) {
+                    currentRayVis *= 0.8; 
+                    currOrig = h.pos + L * EPS;
+                    distToLight -= h.t;
+                } else {
+                    currentRayVis = 0.0;
+                    break;
+                }
+            }
+            
+            totalVis += currentRayVis;
+        }
+        return totalVis / float(SHADOW_SAMPLES);
+        }
+
+        float fresnel(float cosTheta, float ior) {
+        float r0 = (1.0 - ior) / (1.0 + ior);
+        r0 = r0 * r0;
+        return r0 + (1.0 - r0) * pow(1.0 - cosTheta, 5.0);
+        }
+
+        void main() {
+        vec2 uv = (gl_FragCoord.xy / u_resolution) * 2.0 - 1.0;
+        uv.x *= u_resolution.x / u_resolution.y;
+
+        vec3 camPos = vec3(0.0, 0.0, 4.0);
+        vec3 rayDir = normalize(vec3(uv, -1.5));
+
+        vec3 col = vec3(0.0);
+        vec3 throughput = vec3(1.0);
+        vec3 orig = camPos;
+        vec3 dir = rayDir;
+
+        vec3 lightPos1 = vec3(3.0 * cos(u_light1Angle), 3.0, 3.0 * sin(u_light1Angle));
+        // Light 2: Moves only in Y. Fixed X=0.5, Z=0.0
+        vec3 lightPos2 = vec3(0.5, u_light2Height, 0.0);
+
+        for (int depth = 0; depth < MAX_DEPTH; depth++) {
+            Hit h = sceneIntersect(orig, dir);
+
+            if (h.t >= INF) {
+            float t = 0.5 * (dir.y + 1.0);
+            vec3 sky = mix(vec3(0.1, 0.1, 0.15), vec3(0.5, 0.6, 0.8), t);
+            col += throughput * sky;
+            break;
+            }
+
+            vec3 N = h.normal;
+            bool entering = dot(dir, N) < 0.0;
+            if (!entering) N = -N;
+            vec3 P = h.pos;
+
+            // Type 0: Standard
+            if (h.mat.type == 0) {
+            vec3 direct = vec3(0.0);
+            vec3 linearDiff = srgbToLinear(h.mat.diff);
+            vec3 linearSpec = srgbToLinear(h.mat.spec);
+
+            // --- Light 1 Calculation ---
+            if (u_light1On > 0.5) {
+                float s1 = getShadow(P, lightPos1, gl_FragCoord.xy);
+                vec3 L1 = normalize(lightPos1 - P);
+                float diff1 = max(dot(N, L1), 0.0);
+                vec3 H1 = normalize(L1 - dir);
+                float spec1 = (h.mat.exp > 0.0) ? pow(max(dot(N, H1), 0.0), h.mat.exp) : 0.0;
+                direct += (linearDiff * diff1 + linearSpec * spec1) * s1 * 0.6;
+            }
+
+            // --- Light 2 Calculation ---
+            if (u_light2On > 0.5) {
+                float s2 = getShadow(P, lightPos2, gl_FragCoord.xy + 50.0);
+                vec3 L2 = normalize(lightPos2 - P);
+                float diff2 = max(dot(N, L2), 0.0);
+                vec3 H2 = normalize(L2 - dir);
+                float spec2 = (h.mat.exp > 0.0) ? pow(max(dot(N, H2), 0.0), h.mat.exp) : 0.0;
+                direct += (linearDiff * diff2 + linearSpec * spec2) * s2 * 0.4;
+            }
+
+            direct += srgbToLinear(h.mat.amb);
+            col += throughput * direct;
+            break; 
+            }
+
+            // Type 1: Mirror
+            else if (h.mat.type == 1) {
+            vec3 specCol = srgbToLinear(h.mat.spec);
+            if (u_light1On > 0.5) {
+                vec3 L1 = normalize(lightPos1 - P);
+                vec3 H = normalize(L1 - dir);
+                float glint = pow(max(dot(N, H), 0.0), h.mat.exp);
+                col += throughput * glint * specCol;
+            }
+            if (u_light2On > 0.5) {
+                vec3 L2 = normalize(lightPos2 - P);
+                vec3 H = normalize(L2 - dir);
+                float glint = pow(max(dot(N, H), 0.0), h.mat.exp);
+                col += throughput * glint * specCol;
+            }
+            
+            throughput *= srgbToLinear(h.mat.diff);
+            dir = reflect(dir, N);
+            orig = P + N * EPS;
+            }
+
+            // Type 2: Glass
+            else if (h.mat.type == 2) {
+            float kr = fresnel(max(dot(-dir, N), 0.0), h.mat.ior);
+            vec3 specCol = srgbToLinear(h.mat.spec);
+
+            if (u_light1On > 0.5) {
+                vec3 L1 = normalize(lightPos1 - P);
+                vec3 H = normalize(L1 - dir);
+                float glint = pow(max(dot(N, H), 0.0), h.mat.exp);
+                col += throughput * glint * kr * specCol;
+            }
+            
+            throughput *= srgbToLinear(h.mat.diff);
+            
+            float eta = entering ? (1.0 / h.mat.ior) : h.mat.ior;
+            float cosTheta = dot(-dir, N);
+            float k = 1.0 - eta * eta * (1.0 - cosTheta * cosTheta);
+            
+            if (k < 0.0) {
+                dir = reflect(dir, N);
+                orig = P + N * EPS;
+            } else {
+                vec3 refr = eta * dir + (eta * cosTheta - sqrt(k)) * N;
+                dir = normalize(refr);
+                orig = P - N * EPS;
+            }
+            }
+        }
+
+        col = pow(col, vec3(1.0/2.2));
+        gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
+        }
+        `;
+
+        function compile(type, source) {
+        const s = gl.createShader(type);
+        gl.shaderSource(s, source);
+        gl.compileShader(s);
+        if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+            console.error("Shader Compile Error:", gl.getShaderInfoLog(s));
+            throw new Error("Shader failed to compile.");
+        }
+        return s;
+        }
+
+        const prog = gl.createProgram();
+        gl.attachShader(prog, compile(gl.VERTEX_SHADER, vsSrc));
+        gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fsSrc));
+        gl.linkProgram(prog);
+        gl.useProgram(prog);
+
+        const buf = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, -1,1, 1,-1, 1,1]), gl.STATIC_DRAW);
+        const posLoc = gl.getAttribLocation(prog, 'a_pos');
+        gl.enableVertexAttribArray(posLoc);
+        gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+        const uRes = gl.getUniformLocation(prog, 'u_resolution');
+        const uL1Ang = gl.getUniformLocation(prog, 'u_light1Angle');
+        const uL2H = gl.getUniformLocation(prog, 'u_light2Height');
+        const uL1On = gl.getUniformLocation(prog, 'u_light1On');
+        const uL2On = gl.getUniformLocation(prog, 'u_light2On');
+
+        // FIXED: DYNAMIC SIZING
+        function resizeCanvas() {
+            // Make the internal buffer match the display size for sharpness
+            const displayWidth  = canvas.clientWidth;
+            const displayHeight = canvas.clientHeight;
+
+            if (canvas.width  !== displayWidth || canvas.height !== displayHeight) {
+                canvas.width  = displayWidth;
+                canvas.height = displayHeight;
+                gl.viewport(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        function draw() {
+        resizeCanvas(); // Check for resize every frame
+
+        const l1Angle = parseFloat(document.getElementById('slider1').value) * Math.PI / 180;
+        const l2Height = parseFloat(document.getElementById('slider2').value);
+        const l1On = document.getElementById('sw1').checked ? 1.0 : 0.0;
+        const l2On = document.getElementById('sw2').checked ? 1.0 : 0.0;
+
+        gl.uniform2f(uRes, canvas.width, canvas.height);
+        gl.uniform1f(uL1Ang, l1Angle);
+        gl.uniform1f(uL2H, l2Height);
+        gl.uniform1f(uL1On, l1On);
+        gl.uniform1f(uL2On, l2On);
+        
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+        requestAnimationFrame(draw);
+        }
+
+        document.querySelectorAll('input').forEach(el => {
+            el.addEventListener('input', () => {  });
+        });
+
+        draw();
+    </script>
+</body>
+</html>

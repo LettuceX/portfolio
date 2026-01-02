@@ -123,3 +123,20 @@ footer { text-align: center; padding: 40px; color: #555; font-size: 0.9rem; }
 }
 .modal-meta span { margin-right: 40px; color: #888; font-size: 0.9rem; }
 .modal-header { border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
+
+/* style.css */
+
+.project-iframe {
+    width: 100%;
+    height: 800px; /* Adjust height as needed */
+    display: block;
+    background-color: #000; /* Nice fallback for WebGL loading */
+    border-radius: 4px;
+}
+
+/* Optional: Make it responsive for mobile */
+@media (max-width: 768px) {
+    .project-iframe {
+        height: 400px;
+    }
+}

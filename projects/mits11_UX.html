@@ -40,16 +40,11 @@
 <div class="modal-header">
     <h2>MITS 11: Enterprise UX/UI Modernization</h2>
     <div class="modal-meta">
-        <span><strong>Role: </strong>Lead UX Researcher & UI Designer</span>
+        <span><strong>Role: </strong>Lead UX Designer</span>
         <span><strong>Focus: </strong>Data Visualization, Workflow Automation, Cognitive Load Management</span>
     </div>
     <div class="modal-meta">
-        <span><strong>Tools: </strong>
-            <span class="tool-tag">Figma</span>
-            <span class="tool-tag">Adobe XD</span>
-            <span class="tool-tag">User Interviews</span>
-            <span class="tool-tag">Design Systems</span>
-        </span>
+        <span><strong>Tools: </strong>Figma, Adobe XD, User Interviews, Design Systems</span>
     </div>
 </div>
 
@@ -62,10 +57,16 @@
     <div class="ux-box">
         <span class="ux-title">Macro View (Aggregate Dashboard)</span>
         <p>A high-level "Command Center" dashboard that aggregates status across 100+ channels. I utilized "Management by Exception" principles—using color (Green/Red/Amber) to draw attention solely to anomalies, allowing operators to ignore healthy systems.</p>
+        <div class="image-container">
+            <img src="../assets/mits11_UX/system_overview.png" alt="Test Plan Manager Figma Design Concept" />
+        </div>
     </div>
     <div class="ux-box">
         <span class="ux-title">Micro View (Granular Analysis)</span>
         <p>Drill-down views for specific channels. Prioritizes real-time telemetry graphs and interactive scrubbing, enabling engineers to perform root-cause analysis on specific hardware events.</p>
+        <div class="image-container">
+            <img src="../assets/mits11_UX/test_summary.png" alt="Test Plan Manager Figma Design Concept" />
+        </div>
     </div>
 </div>
 
@@ -75,6 +76,9 @@
     <li><strong>Visual Validation:</strong> Steps are represented as modular blocks that snap together. I designed validation logic that visually highlights invalid connections (error states) immediately, preventing runtime errors.</li>
     <li><strong>Contextual Configuration:</strong> Clicking a block reveals a context-sensitive properties panel, keeping the main canvas clean and focused on the logic flow rather than parameter clutter.</li>
 </ul>
+<div class="image-container">
+    <img src="../assets/mits11_UX/schedule_editor.png" alt="Schedule Editor Figma Design Concept" />
+</div>
 
 <h3>3. Atomic Design System</h3>
 <p>To ensure consistency across the web platform, I established a comprehensive Design System in <strong>Figma</strong>. This atomic design approach improved development velocity and maintained visual unity across disparate modules.</p>
@@ -87,8 +91,11 @@
 <p>The design process was iterative, driven by direct feedback loops with internal hardware engineers.</p>
 <ul style="margin-left: 20px; margin-bottom: 20px;">
     <li><strong>Pain Point Discovery:</strong> User interviews revealed that engineers frequently lost mental context of which "Virtual Channel" corresponded to which "Physical Rack Unit."</li>
-    <li><strong>Spatial Mapping Solution:</strong> I introduced a "Channel Map" visualization—a graphical grid mirroring the physical rack layout—allowing users to select units spatially, reducing selection errors by ~40%.</li>
+    <li><strong>Spatial Mapping Solution:</strong> Introduced a "Channel Map" visualization—a graphical grid mirroring the physical rack layout—allowing users to select units spatially, reducing selection errors.</li>
 </ul>
+<div class="image-container">
+    <img src="../assets/mits11_UX/aux_mapping.png" alt="Physical and Virtual Channel Mapping Figma Design Concept" />
+</div>
 
 <h3>5. Resource Allocation & Orchestration</h3>
 <p>A critical challenge was enabling users to bundle channels from different physical machines into a single "Test Task." I designed a centralized Resource Management interface.</p>
@@ -96,6 +103,9 @@
     <li><strong>Drag-and-Drop Provisioning:</strong> Users can drag available channels from a global pool into a "Task Bucket," visually grouping disparate hardware resources into a single logical unit.</li>
     <li><strong>Conflict Resolution UI:</strong> If a user selects a channel that is currently occupied, the UI provides a clear "Reserved" state with a tooltip estimating availability, preemptively resolving scheduling conflicts.</li>
 </ul>
+<div class="image-container">
+    <img src="../assets/mits11_UX/channel_dashboard.png" alt="Schedule Editor Figma Design Concept" />
+</div>
 
 <h3>6. Diagnostic Reporting & QC</h3>
 <p>For the Quality Control pipeline, I designed a comprehensive "Validation Report" view that transforms raw data into an actionable Pass/Fail verdict.</p>
@@ -103,3 +113,9 @@
     <li><strong>Root Cause Visualization:</strong> A specialized view that pinpoints exactly <em>why</em> a battery failed QC (e.g., highlighting specific timestamps where Voltage dropped below threshold).</li>
     <li><strong>Benchmark Overlays:</strong> Designed a comparative feature allowing users to overlay current results against a "Golden Sample" (ideal benchmark), facilitating instant visual quality assurance.</li>
 </ul>
+<div class="image-container">
+    <img src="../assets/mits11_UX/EOL_dashboard.png" alt="EOL Dashboard Figma Design Concept" />
+</div>
+<div class="image-container">
+    <img src="../assets/mits11_UX/create_EOL.png" alt="Create EOL Profile Figma Design Concept" />
+</div>

@@ -12,11 +12,9 @@
     <nav>
         <div class="logo">Meier Yi</div>
         <div class="nav-links">
-            <a href="#works">Works</a>
             <a href="#projects">Projects</a>
             <a href="#skills">Skills</a>
             <a href="#experience">Experience</a>
-            <a href="#contact">Contact</a>
         </div>
     </nav>
 
@@ -24,81 +22,106 @@
         <div class="container">
             <h1>Hi, I'm <span>Meier Yi</span></h1>
             <p>A fullstack developer and a UX designer of 3 years experience</p>
-            <a href="#projects" class="btn">View My Portfolio</a>
+            <p>Email: andreala07333@gmail.com</p>
         </div>
     </header>
 
     <section id="projects" class="container">
-        <h2>Featured Projects</h2>
+        <h2>Visual Projects</h2>
         <div class="grid">
             <div class="card" data-project="mits11">
-                <div class="card-img img-1"><span>GAMEPLAY GIF</span></div>
+                <div class="card-img img-1">
+                    <img src="../assets/covers/mits11_card.png" alt="Schedule Editor Figma Design Concept" />
+                </div>
                 <div class="card-content">
-                    <span class="card-tag">Systems Design</span>
-                    <h3>UX Design</h3>
-                    <p>A fast-paced combat prototype focused on resource management and weapon synergy.</p>
+                    <span class="card-tag">UX & UI Design</span>
+                    <h3>Responsive Web & Desktop App Design</h3>
+                    <p>Industrial UI redesign focusing on data visualization and workflow optimization.</p>
                     
                     <button class="btn" onclick="openProject('projects/mits11_UX.html')">View Details</button>
                 </div>
             </div>
+
             <div class="card" data-project="mits11">
-                <div class="card-img img-1"><span>GAMEPLAY GIF</span></div>
+                <div class="card-img img-1">
+                    <img src="../assets/covers/arbin_website_card.gif" alt="Schedule Editor Figma Design Concept" />
+                </div>
                 <div class="card-content">
-                    <span class="card-tag">Systems Design</span>
-                    <h3>UX Design</h3>
-                    <p>A fast-paced combat prototype focused on resource management and weapon synergy.</p>
+                    <span class="card-tag">UX Design</span>
+                    <h3>Arbin.com Website</h3>
+                    <p>Dynamic corporate platform optimized for SEO, performance, and lead generation.</p>
                     
                     <button class="btn" onclick="openProject('projects/arbin_website.html')">View Details</button>
                 </div>
             </div>
+
+            <div class="card">
+                <div class="card-img img-2">
+                    <img src="../assets/covers/raytracing_card.gif" alt="Schedule Editor Figma Design Concept" />
+                </div>
+                <div class="card-content">
+                    <span class="card-tag">Rendering</span>
+                    <h3>WebGL Raytracing</h3>
+                    <p>Real-time GPU ray tracing engine using WebGL and GLSL shaders.</p>
+                    <button class="btn" onclick="openProject('projects/ray_tracing.html', 'iframe')">View Details</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="projects" class="container">
+        <h2>System & Coding Projects</h2>
+        <div class="grid">
             <div class="card" data-project="mits11">
-                <div class="card-img img-1"><span>GAMEPLAY GIF</span></div>
+                <div class="card-img img-1">
+                    <img src="../assets/covers/mits11_card.png" alt="Schedule Editor Figma Design Concept" />
+                </div>
                 <div class="card-content">
                     <span class="card-tag">Systems Design</span>
                     <h3>Control System for Battery Testing (MITS 11)</h3>
-                    <p>A fast-paced combat prototype focused on resource management and weapon synergy.</p>
+                    <p>Distributed event-driven control system managing concurrent hardware testing.</p>
                     
                     <button class="btn" onclick="openProject('projects/mits11.html')">View Details</button>
                 </div>
             </div>
 
             <div class="card">
-                <div class="card-img img-2"><span>LEVEL ART</span></div>
+                <div class="card-img img-2">
+                    <div class="card-img img-3">
+                        <img src="../assets/covers/soap_card.png" alt="Schedule Editor Figma Design Concept" />
+                    </div>
+                </div>
                 <div class="card-content">
-                    <span class="card-tag">Level Design</span>
-                    <h3>Neon Labyrinth</h3>
-                    <p>Procedurally generated dungeon crawler created during the Global Game Jam.</p>
+                    <span class="card-tag">System Design</span>
+                    <h3>Customer Portal Backend (SOAP)</h3>
+                    <p>Self-service portal integrating legacy NetSuite ERP with modern web architecture.</p>
                     <button class="btn" onclick="openProject('projects/customer_portal.html')">View Details</button>
                 </div>
             </div>
 
             <div class="card">
-                <div class="card-img img-3"><span>EXCEL SHEET</span></div>
+                <div class="card-img img-3">
+                    <div class="card-img img-3">
+                        <img src="../assets/covers/database_card.png" alt="Schedule Editor Figma Design Concept" />
+                    </div>
+                </div>
                 <div class="card-content">
-                    <span class="card-tag">Economy Balance</span>
-                    <h3>RPG Economy Sim</h3>
-                    <p>A pure data simulation for an MMO economy, built in Python and Excel.</p>
+                    <span class="card-tag">Database Design</span>
+                    <h3>Legacy Database Schema Migration</h3>
+                    <p>High-performance C# utility for sharding and migrating massive SQL datasets. <strong>(Code Snippets Included)</strong></p>
                     <button class="btn" onclick="openProject('projects/database_migration.html')">View Details</button>
                 </div>
             </div>
 
             <div class="card">
-                <div class="card-img img-3"><span>EXCEL SHEET</span></div>
-                <div class="card-content">
-                    <span class="card-tag">Economy Balance</span>
-                    <h3>RPG Economy Sim</h3>
-                    <p>A pure data simulation for an MMO economy, built in Python and Excel.</p>
-                    <button class="btn" onclick="openProject('projects/schedule_simulator.html')">View Details</button>
+                <div class="card-img img-3">
+                    <img src="../assets/covers/simulator_card.png" alt="Schedule Editor Figma Design Concept" />
                 </div>
-            </div>
-
-            <div class="card">
-                <div class="card-img img-2"><span>LEVEL ART</span></div>
                 <div class="card-content">
-                    <span class="card-tag">Level Design</span>
-                    <h3>Neon Labyrinth</h3>
-                    <p>Procedurally generated dungeon crawler created during the Global Game Jam.</p>
-                    <button class="btn" onclick="openProject('projects/ray_tracing.html', 'iframe')">View Details</button>
+                    <span class="card-tag">System Simulation</span>
+                    <h3>Battery Test Simulator</h3>
+                    <p>Physics-based simulation engine using game-loop architecture for battery testing. <strong>(Code Snippets Included)</strong></p>
+                    <button class="btn" onclick="openProject('projects/schedule_simulator.html')">View Details</button>
                 </div>
             </div>
         </div>
@@ -133,35 +156,27 @@
 
     <section id="experience" class="container">
         <h2>Work Experience</h2>
-        
-        <div class="job">
-            <div class="job-header">
-                <h3>Junior Designer</h3>
-                <span class="job-date">2023 - Present</span>
-            </div>
-            <div class="job-role">Indie Studio "Pixel Forge"</div>
-            <ul>
-                <li>Designed and implemented the inventory management system for an unannounced RPG.</li>
-                <li>Reduced player onboarding drop-off by 15% through iterative tutorials.</li>
-                <li>Collaborated with 3 engineers to document API requirements for gameplay tools.</li>
-            </ul>
-        </div>
 
         <div class="job">
             <div class="job-header">
-                <h3>QA Tester</h3>
-                <span class="job-date">2021 - 2022</span>
+                <h3>US Team Lead & Software Engineer</h3>
+                <span class="job-date">Oct 2022 - May 2025</span>
             </div>
-            <div class="job-role">Major Publisher Inc.</div>
+            <div class="job-role">Arbin Instruments (USA)</div>
             <ul>
-                <li>Identified over 300 bugs in the physics engine.</li>
-                <li>Created automated scripts to test collision boundaries.</li>
+                <li>Developed backend systems for industrial battery testing software (MITS) supporting <strong>large-scale data management & analysis</strong>.</li>
+                <li>Built and optimized database operations for <strong>on-premise and cloud</strong> environments <strong>(MSSQL, AWS, Azure)</strong>.</li>
+                <li>Implemented <strong>real-time communication</strong> using <strong>SignalR & TCP/IP</strong>, enabling continuous data streaming and monitoring.</li>
+                <li>Integrated <strong>RPA workflow automation</strong> to streamline testing procedures and backend orchestration.</li>
+                <li>Designed and maintained <strong>RESTful APIs</strong> for cross-platform compatibility and secure client integration.</li>
+                <li>Collaborated with embedded teams to <strong>interface firmware controllers</strong> with backend services, improving system reliability.</li>
+                <li><strong>Lead global development teams</strong> across China, Vietnam, and the US, ensuring cohesive delivery of technical milestones.</li>
             </ul>
         </div>
     </section>
 
     <footer>
-        <p>&copy; 2024 Meier Yi - Portfolio for Graduate Admission</p>
+        <p>&copy; 2024 Meier Yi - Portfolio</p>
     </footer>
 
     <div id="projectModal" class="modal">
